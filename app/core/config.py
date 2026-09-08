@@ -13,10 +13,16 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
+    cors_origins: str = "http://localhost:3000,http://localhost:5173"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,
     )
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 @lru_cache
 def get_settings() -> Settings:
