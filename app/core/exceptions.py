@@ -8,3 +8,7 @@ class PermissionDeniedError(Exception):
 
 class ConflictError(Exception):
     """The operation conflicts with existing state (uniqueness violation, FK-RESTRICT in use)."""
+
+
+class ExternalServiceError(Exception):
+    """A call to an upstream/external service failed or returned an unusable response."""

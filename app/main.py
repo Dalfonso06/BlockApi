@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import get_settings
-from app.core.exceptions import ConflictError, NotFoundError, PermissionDeniedError
+from app.core.exceptions import ConflictError, ExternalServiceError, NotFoundError, PermissionDeniedError
 from sqlalchemy import text
 from app.database.connection import engine
 from app.api.auth import router as auth_router
@@ -11,6 +11,7 @@ from app.api.training_blocks import router as training_blocks_router
 from app.api.training_weeks import router as training_weeks_router
 from app.api.workout_types import router as workout_types_router
 from app.api.workouts import router as workouts_router
+from app.api.weather import router as weather_router
 
 settings = get_settings()
 
@@ -33,6 +34,7 @@ app.include_router(training_blocks_router)
 app.include_router(training_weeks_router)
 app.include_router(workout_types_router)
 app.include_router(workouts_router)
+app.include_router(weather_router)
 
 
 @app.exception_handler(NotFoundError)
@@ -48,6 +50,11 @@ def handle_permission_denied(request: Request, exc: PermissionDeniedError):
 @app.exception_handler(ConflictError)
 def handle_conflict(request: Request, exc: ConflictError):
     return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+
+@app.exception_handler(ExternalServiceError)
+def handle_external_service_error(request: Request, exc: ExternalServiceError):
+    return JSONResponse(status_code=502, content={"detail": str(exc)})
 
 @app.get("/")
 async def root():
