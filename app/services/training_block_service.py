@@ -26,10 +26,15 @@ def get_training_blocks_by_user(db: Session, user_id: int) -> list[TrainingBlock
 
 
 def create_training_block(db: Session, user_id: int, block_in: TrainingBlockCreate) -> TrainingBlock:
+    from app.services import training_week_service
+
     block = TrainingBlock(user_id=user_id, **block_in.model_dump())
     db.add(block)
     db.commit()
     db.refresh(block)
+
+    training_week_service.generate_weeks_for_block(db, block)
+
     return block
 
 

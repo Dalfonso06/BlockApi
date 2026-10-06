@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError, PermissionDeniedError
+from app.models.training_block import TrainingBlock
 from app.models.training_week import TrainingWeek
 from app.schemas.training_week import TrainingWeekCreate, TrainingWeekUpdate
 from app.services import training_block_service
@@ -57,3 +60,39 @@ def update_training_week(db: Session, week: TrainingWeek, week_in: TrainingWeekU
 def delete_training_week(db: Session, week: TrainingWeek) -> None:
     db.delete(week)
     db.commit()
+
+
+def generate_weeks_for_block(db: Session, block: TrainingBlock) -> list[TrainingWeek]:
+    """Split a block's date range into Monday-Sunday weeks, numbered from 1.
+
+    The first and last weeks are truncated to the block's actual start_date/
+    end_date, so they can be partial; every week in between runs a full
+    Monday through Sunday.
+    """
+    weeks: list[TrainingWeek] = []
+    current_start = block.start_date
+    week_number = 1
+
+    while current_start <= block.end_date:
+        days_until_sunday = 6 - current_start.weekday()
+        natural_week_end = current_start + timedelta(days=days_until_sunday)
+        week_end = min(natural_week_end, block.end_date)
+
+        week = TrainingWeek(
+            training_block_id=block.id,
+            week_number=week_number,
+            start_date=current_start,
+            end_date=week_end,
+        )
+        db.add(week)
+        weeks.append(week)
+
+        week_number += 1
+        current_start = week_end + timedelta(days=1)
+
+    db.commit()
+
+    for week in weeks:
+        db.refresh(week)
+
+    return weeks
