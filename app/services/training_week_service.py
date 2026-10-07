@@ -5,7 +5,14 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import NotFoundError, PermissionDeniedError
 from app.models.training_block import TrainingBlock
 from app.models.training_week import TrainingWeek
-from app.schemas.training_week import TrainingWeekCreate, TrainingWeekUpdate
+from app.models.workout import DistanceUnit, Workout
+from app.models.workout_type import WorkoutType
+from app.schemas.training_week import (
+    TrainingWeekBreakdownResponse,
+    TrainingWeekCreate,
+    TrainingWeekUpdate,
+    WorkoutTypeBreakdownItem,
+)
 from app.services import training_block_service
 
 
@@ -60,6 +67,57 @@ def update_training_week(db: Session, week: TrainingWeek, week_in: TrainingWeekU
 def delete_training_week(db: Session, week: TrainingWeek) -> None:
     db.delete(week)
     db.commit()
+
+
+def get_training_week_breakdown(db: Session, week_id: int, user_id: int) -> TrainingWeekBreakdownResponse:
+    week = get_training_week_owned(db, week_id, user_id)
+
+    rows = (
+        db.query(Workout, WorkoutType.name)
+        .join(WorkoutType, Workout.workout_type_id == WorkoutType.id)
+        .filter(Workout.training_week_id == week_id)
+        .order_by(WorkoutType.name)
+        .all()
+    )
+
+    workouts_by_type: dict[str, list[Workout]] = {}
+    for workout, workout_type_name in rows:
+        workouts_by_type.setdefault(workout_type_name, []).append(workout)
+
+    workout_types = []
+    for workout_type_name, workouts in workouts_by_type.items():
+        duration_sum = sum(workout.planned_duration or 0 for workout in workouts)
+
+        # Only sum distance when every workout that has one shares the same
+        # unit — adding e.g. miles and meters together would be meaningless.
+        distance_entries = [
+            (workout.planned_distance, workout.unit)
+            for workout in workouts
+            if workout.planned_distance is not None and workout.unit is not None
+        ]
+        units = {unit for _, unit in distance_entries}
+        single_unit = DistanceUnit(units.pop()) if len(units) == 1 else None
+        distance = sum(value for value, _ in distance_entries) if single_unit is not None else None
+
+        workout_types.append(
+            WorkoutTypeBreakdownItem(
+                workout_type=workout_type_name,
+                duration_sum=duration_sum,
+                distance=distance,
+                unit=single_unit,
+            )
+        )
+
+    total_planned_duration_minutes = sum(workout.planned_duration or 0 for workout, _ in rows)
+
+    return TrainingWeekBreakdownResponse(
+        training_week_id=week.id,
+        week_number=week.week_number,
+        start_date=week.start_date,
+        end_date=week.end_date,
+        total_planned_duration_minutes=total_planned_duration_minutes,
+        workout_types=workout_types,
+    )
 
 
 def generate_weeks_for_block(db: Session, block: TrainingBlock) -> list[TrainingWeek]:

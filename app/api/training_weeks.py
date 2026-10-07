@@ -4,7 +4,12 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.database.session import get_db
 from app.models.user import User
-from app.schemas.training_week import TrainingWeekCreate, TrainingWeekResponse, TrainingWeekUpdate
+from app.schemas.training_week import (
+    TrainingWeekBreakdownResponse,
+    TrainingWeekCreate,
+    TrainingWeekResponse,
+    TrainingWeekUpdate,
+)
 from app.services import training_week_service
 
 router = APIRouter(prefix="/training-weeks", tags=["training-weeks"])
@@ -22,6 +27,15 @@ def list_training_weeks(
 @router.get("/{week_id}", response_model=TrainingWeekResponse)
 def get_training_week(week_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return training_week_service.get_training_week_owned(db, week_id, current_user.id)
+
+
+@router.get("/{week_id}/breakdown", response_model=TrainingWeekBreakdownResponse)
+def get_training_week_breakdown(
+    week_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return training_week_service.get_training_week_breakdown(db, week_id, current_user.id)
 
 
 @router.post("/", response_model=TrainingWeekResponse, status_code=status.HTTP_201_CREATED)
