@@ -2,6 +2,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.workout import DistanceUnit
+
 
 class TrainingWeekBase(BaseModel):
     training_block_id: int
@@ -29,3 +31,19 @@ class TrainingWeekResponse(TrainingWeekBase):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class WorkoutTypeBreakdownItem(BaseModel):
+    workout_type: str
+    duration_sum: int
+    distance: float | None
+    unit: DistanceUnit | None
+
+
+class TrainingWeekBreakdownResponse(BaseModel):
+    training_week_id: int
+    week_number: int
+    start_date: date
+    end_date: date
+    total_planned_duration_minutes: int
+    workout_types: list[WorkoutTypeBreakdownItem]
