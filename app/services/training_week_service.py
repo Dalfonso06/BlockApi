@@ -73,7 +73,7 @@ def get_training_week_breakdown(db: Session, week_id: int, user_id: int) -> Trai
     week = get_training_week_owned(db, week_id, user_id)
 
     rows = (
-        db.query(Workout, WorkoutType.name)
+        db.query(Workout, WorkoutType.name, WorkoutType.default_unit)
         .join(WorkoutType, Workout.workout_type_id == WorkoutType.id)
         .filter(Workout.training_week_id == week_id)
         .order_by(WorkoutType.name)
@@ -81,34 +81,33 @@ def get_training_week_breakdown(db: Session, week_id: int, user_id: int) -> Trai
     )
 
     workouts_by_type: dict[str, list[Workout]] = {}
-    for workout, workout_type_name in rows:
+    default_unit_by_type: dict[str, str | None] = {}
+    for workout, workout_type_name, default_unit in rows:
         workouts_by_type.setdefault(workout_type_name, []).append(workout)
+        default_unit_by_type[workout_type_name] = default_unit
 
     workout_types = []
     for workout_type_name, workouts in workouts_by_type.items():
         duration_sum = sum(workout.planned_duration or 0 for workout in workouts)
 
-        # Only sum distance when every workout that has one shares the same
-        # unit — adding e.g. miles and meters together would be meaningless.
-        distance_entries = [
-            (workout.planned_distance, workout.unit)
-            for workout in workouts
-            if workout.planned_distance is not None and workout.unit is not None
-        ]
-        units = {unit for _, unit in distance_entries}
-        single_unit = DistanceUnit(units.pop()) if len(units) == 1 else None
-        distance = sum(value for value, _ in distance_entries) if single_unit is not None else None
+        # Distances are always stored in meters now, so summing is always
+        # unit-consistent — null only means none of these workouts have one.
+        distances = [workout.planned_distance for workout in workouts if workout.planned_distance is not None]
+        distance = sum(distances) if distances else None
+
+        default_unit = default_unit_by_type[workout_type_name]
+        unit = DistanceUnit(default_unit) if default_unit is not None else None
 
         workout_types.append(
             WorkoutTypeBreakdownItem(
                 workout_type=workout_type_name,
                 duration_sum=duration_sum,
                 distance=distance,
-                unit=single_unit,
+                unit=unit,
             )
         )
 
-    total_planned_duration_minutes = sum(workout.planned_duration or 0 for workout, _ in rows)
+    total_planned_duration_minutes = sum(workout.planned_duration or 0 for workout, _, _ in rows)
 
     return TrainingWeekBreakdownResponse(
         training_week_id=week.id,

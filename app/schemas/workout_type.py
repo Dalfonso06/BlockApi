@@ -1,8 +1,11 @@
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.workout import DistanceUnit
+
 
 class WorkoutTypeBase(BaseModel):
     name: str = Field(min_length=1, max_length=50)
+    default_unit: DistanceUnit | None = None
 
 
 class WorkoutTypeCreate(WorkoutTypeBase):

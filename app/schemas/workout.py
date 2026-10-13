@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.workout import DistanceUnit, WorkoutStatus
+from app.models.workout import WorkoutStatus
 
 
 class WorkoutBase(BaseModel):
@@ -13,7 +13,6 @@ class WorkoutBase(BaseModel):
     description: str | None = None
     planned_duration: int | None = Field(default=None, gt=0)
     planned_distance: float | None = Field(default=None, gt=0)
-    unit: DistanceUnit | None = None
     status: WorkoutStatus = WorkoutStatus.PLANNED
     completed_at: datetime | None = None
     notes: str | None = None
