@@ -20,3 +20,9 @@ class WorkoutTypeResponse(WorkoutTypeBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+
+
+class WorkoutTypeUnitSummary(BaseModel):
+    id: int
+    name: str
+    unit: DistanceUnit | None

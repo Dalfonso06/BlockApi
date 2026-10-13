@@ -2,8 +2,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, NotFoundError
+from app.models.user_unit_preference import UserWorkoutTypeUnitPreference
 from app.models.workout_type import WorkoutType
-from app.schemas.workout_type import WorkoutTypeCreate, WorkoutTypeUpdate
+from app.schemas.workout_type import WorkoutTypeCreate, WorkoutTypeUnitSummary, WorkoutTypeUpdate
 
 
 def get_all_workout_types(db: Session) -> list[WorkoutType]:
@@ -61,3 +62,33 @@ def delete_workout_type(db: Session, workout_type: WorkoutType) -> None:
     except IntegrityError:
         db.rollback()
         raise ConflictError("Cannot delete a workout type that is still referenced by existing workouts")
+
+
+def get_workout_types_with_resolved_units(db: Session, user_id: int) -> list[WorkoutTypeUnitSummary]:
+    """Every workout type, with the unit to display for this user: their
+    preference override if one exists, otherwise that type's default_unit."""
+    workout_types = get_all_workout_types(db)
+
+    if not workout_types:
+        return []
+
+    type_ids = [workout_type.id for workout_type in workout_types]
+
+    preference_rows = (
+        db.query(UserWorkoutTypeUnitPreference.workout_type_id, UserWorkoutTypeUnitPreference.unit)
+        .filter(
+            UserWorkoutTypeUnitPreference.user_id == user_id,
+            UserWorkoutTypeUnitPreference.workout_type_id.in_(type_ids),
+        )
+        .all()
+    )
+    preferences = {workout_type_id: unit for workout_type_id, unit in preference_rows}
+
+    return [
+        WorkoutTypeUnitSummary(
+            id=workout_type.id,
+            name=workout_type.name,
+            unit=preferences.get(workout_type.id, workout_type.default_unit),
+        )
+        for workout_type in workout_types
+    ]
