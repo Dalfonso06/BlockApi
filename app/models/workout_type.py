@@ -17,3 +17,8 @@ class WorkoutType(Base):
         nullable=False,
         index=True,
     )
+
+    default_unit: Mapped[str | None] = mapped_column(
+        String(10),
+        nullable=True,
+    )
