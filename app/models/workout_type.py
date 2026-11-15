@@ -1,6 +1,15 @@
+import enum
+
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database.base import Base
+
+
+class WorkoutCategory(str, enum.Enum):
+    ENDURANCE = "endurance"
+    STRENGTH = "strength"
+    MOBILITY = "mobility"
+    RECOVERY = "recovery"
 
 
 class WorkoutType(Base):
@@ -20,5 +29,10 @@ class WorkoutType(Base):
 
     default_unit: Mapped[str | None] = mapped_column(
         String(10),
+        nullable=True,
+    )
+
+    category: Mapped[str | None] = mapped_column(
+        String(20),
         nullable=True,
     )
