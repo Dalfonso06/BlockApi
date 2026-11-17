@@ -9,3 +9,4 @@ from app.models.activity import Activity
 from app.models.endurance_activity_detail import EnduranceActivityDetail
 from app.models.exercise import Exercise
 from app.models.strength_activity_detail import StrengthActivityDetail
+from app.models.strength_set import StrengthSet
