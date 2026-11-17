@@ -4,3 +4,8 @@ from app.models.training_week import TrainingWeek
 from app.models.workout_type import WorkoutType
 from app.models.workout import Workout
 from app.models.user_unit_preference import UserWorkoutTypeUnitPreference
+from app.models.source import Source
+from app.models.activity import Activity
+from app.models.endurance_activity_detail import EnduranceActivityDetail
+from app.models.exercise import Exercise
+from app.models.strength_activity_detail import StrengthActivityDetail
