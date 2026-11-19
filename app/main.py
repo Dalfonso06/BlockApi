@@ -12,6 +12,12 @@ from app.api.training_weeks import router as training_weeks_router
 from app.api.workout_types import router as workout_types_router
 from app.api.workouts import router as workouts_router
 from app.api.weather import router as weather_router
+from app.api.sources import router as sources_router
+from app.api.exercises import router as exercises_router
+from app.api.activities import router as activities_router
+from app.api.endurance_activity_details import router as endurance_activity_details_router
+from app.api.strength_activity_details import router as strength_activity_details_router
+from app.api.strength_sets import router as strength_sets_router
 
 settings = get_settings()
 
@@ -35,6 +41,12 @@ app.include_router(training_weeks_router)
 app.include_router(workout_types_router)
 app.include_router(workouts_router)
 app.include_router(weather_router)
+app.include_router(sources_router)
+app.include_router(exercises_router)
+app.include_router(activities_router)
+app.include_router(endurance_activity_details_router)
+app.include_router(strength_activity_details_router)
+app.include_router(strength_sets_router)
 
 
 @app.exception_handler(NotFoundError)
