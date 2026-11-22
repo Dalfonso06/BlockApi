@@ -10,6 +10,8 @@ class ActivityBase(BaseModel):
     started_at: datetime
     elapsed_duration_seconds: int = Field(gt=0)
     moving_duration_seconds: int | None = Field(default=None, gt=0)
+    average_heart_rate: int | None = Field(default=None, gt=0)
+    max_heart_rate: int | None = Field(default=None, gt=0)
     notes: str | None = None
     source_id: int
     external_id: str | None = Field(default=None, max_length=255)

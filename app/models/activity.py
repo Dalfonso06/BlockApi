@@ -53,6 +53,17 @@ class Activity(Base):
         nullable=True,
     )
 
+    # Session-level, not per-exercise: a heart rate monitor tracks the whole
+    # activity continuously, so this lives here rather than on any
+    # category-specific detail table (e.g. StrengthActivityDetail).
+    average_heart_rate: Mapped[int | None] = mapped_column(
+        nullable=True,
+    )
+
+    max_heart_rate: Mapped[int | None] = mapped_column(
+        nullable=True,
+    )
+
     notes: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,

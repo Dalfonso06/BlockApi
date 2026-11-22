@@ -30,14 +30,6 @@ class EnduranceActivityDetail(Base):
         nullable=True,
     )
 
-    average_heart_rate: Mapped[int | None] = mapped_column(
-        nullable=True,
-    )
-
-    max_heart_rate: Mapped[int | None] = mapped_column(
-        nullable=True,
-    )
-
     average_power: Mapped[int | None] = mapped_column(
         nullable=True,
     )
